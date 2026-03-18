@@ -1,90 +1,209 @@
 <script>
-window.onload = function () {
+window.addEventListener("load", () => {
+  const spaceCanvas = document.getElementById("space");
+  const chartCanvas = document.getElementById("chart");
 
-  const canvas = document.getElementById("space");
-  const ctx = canvas.getContext("2d");
+  if (!spaceCanvas) return;
+  const ctx = spaceCanvas.getContext("2d");
 
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+  function resizeSpace() {
+    spaceCanvas.width = window.innerWidth;
+    spaceCanvas.height = window.innerHeight;
   }
-  resize();
+  resizeSpace();
 
-  let particles = [];
+  const particles = [];
+  const particleCount = 260;
 
-  for (let i = 0; i < 300; i++) {
+  for (let i = 0; i < particleCount; i++) {
     particles.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      angle: Math.random() * Math.PI * 2
+      x: Math.random() * spaceCanvas.width,
+      y: Math.random() * spaceCanvas.height,
+      angle: Math.random() * Math.PI * 2,
+      speed: 0.3 + Math.random() * 0.4,
+      radius: 0.8 + Math.random() * 1.4
     });
   }
 
-  function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  function drawBlackHole() {
+    const cx = spaceCanvas.width / 2;
+    const cy = spaceCanvas.height / 2 - 60;
 
-    let cx = canvas.width / 2;
-    let cy = canvas.height / 2;
+    ctx.clearRect(0, 0, spaceCanvas.width, spaceCanvas.height);
 
-    // частицы
+    ctx.fillStyle = "rgba(5, 7, 12, 0.2)";
+    ctx.fillRect(0, 0, spaceCanvas.width, spaceCanvas.height);
+
     particles.forEach(p => {
-      let dx = cx - p.x;
-      let dy = cy - p.y;
+      const dx = cx - p.x;
+      const dy = cy - p.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
 
       p.angle += 0.02;
-      p.x += Math.cos(p.angle) + dx * 0.0005;
-      p.y += Math.sin(p.angle) + dy * 0.0005;
+      p.x += Math.cos(p.angle) * p.speed + dx * 0.0009;
+      p.y += Math.sin(p.angle) * p.speed + dy * 0.0009;
+
+      if (dist < 48) {
+        p.x = Math.random() * spaceCanvas.width;
+        p.y = Math.random() * spaceCanvas.height;
+      }
 
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
-      ctx.fillStyle = "white";
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
       ctx.fill();
     });
 
-    // чёрная дыра
+    const glow = ctx.createRadialGradient(cx, cy, 20, cx, cy, 170);
+    glow.addColorStop(0, "rgba(120, 0, 255, 0)");
+    glow.addColorStop(0.5, "rgba(130, 70, 255, 0.18)");
+    glow.addColorStop(1, "rgba(130, 70, 255, 0)");
     ctx.beginPath();
-    ctx.arc(cx, cy, 60, 0, Math.PI * 2);
-    ctx.fillStyle = "black";
+    ctx.arc(cx, cy, 170, 0, Math.PI * 2);
+    ctx.fillStyle = glow;
     ctx.fill();
 
-    // кольцо
-    ctx.beginPath();
-    ctx.arc(cx, cy, 90, 0, Math.PI * 2);
-    ctx.strokeStyle = "orange";
-    ctx.lineWidth = 8;
-    ctx.stroke();
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(Date.now() * 0.0005);
+    ctx.scale(1.9, 0.52);
 
-    requestAnimationFrame(animate);
+    const ring = ctx.createRadialGradient(0, 0, 32, 0, 0, 94);
+    ring.addColorStop(0, "rgba(255,150,0,0)");
+    ring.addColorStop(0.35, "rgba(255,120,0,0.9)");
+    ring.addColorStop(0.55, "rgba(255,220,150,0.95)");
+    ring.addColorStop(0.78, "rgba(255,90,0,0.65)");
+    ring.addColorStop(1, "rgba(255,90,0,0)");
+
+    ctx.beginPath();
+    ctx.arc(0, 0, 94, 0, Math.PI * 2);
+    ctx.fillStyle = ring;
+    ctx.fill();
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 52, 0, Math.PI * 2);
+    ctx.fillStyle = "#000";
+    ctx.shadowBlur = 28;
+    ctx.shadowColor = "rgba(120,0,255,0.8)";
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    requestAnimationFrame(drawBlackHole);
   }
 
-  animate();
+  drawBlackHole();
 
-  // АККОРДЕОН (кнопки)
   document.querySelectorAll(".atitle").forEach(title => {
     title.addEventListener("click", () => {
       const pane = title.nextElementSibling;
+      const isOpen = pane.style.display === "block";
 
-      document.querySelectorAll(".pane").forEach(p => p.style.display = "none");
-      pane.style.display = "block";
+      document.querySelectorAll(".pane").forEach(p => {
+        p.style.display = "none";
+      });
+      document.querySelectorAll(".atitle").forEach(t => {
+        t.classList.remove("active");
+      });
+
+      if (!isOpen) {
+        pane.style.display = "block";
+        title.classList.add("active");
+      }
     });
   });
 
-  // ГРАФИК
-  const chart = document.getElementById("chart");
-  if (chart) {
-    const c = chart.getContext("2d");
+  if (chartCanvas) {
+    const c = chartCanvas.getContext("2d");
+    const w = chartCanvas.width;
+    const h = chartCanvas.height;
+
+    c.clearRect(0, 0, w, h);
+
+    const padL = 60;
+    const padR = 25;
+    const padT = 25;
+    const padB = 45;
+
+    c.strokeStyle = "rgba(255,255,255,0.12)";
+    c.lineWidth = 1;
+
+    for (let i = 0; i < 5; i++) {
+      const y = padT + ((h - padT - padB) / 4) * i;
+      c.beginPath();
+      c.moveTo(padL, y);
+      c.lineTo(w - padR, y);
+      c.stroke();
+    }
+
+    for (let i = 0; i < 6; i++) {
+      const x = padL + ((w - padL - padR) / 5) * i;
+      c.beginPath();
+      c.moveTo(x, padT);
+      c.lineTo(x, h - padB);
+      c.stroke();
+    }
+
+    c.strokeStyle = "rgba(255,255,255,0.4)";
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.moveTo(padL, padT);
+    c.lineTo(padL, h - padB);
+    c.lineTo(w - padR, h - padB);
+    c.stroke();
+
+    c.fillStyle = "rgba(255,255,255,0.8)";
+    c.font = "14px Arial";
+    c.fillText("z", 24, padT + 5);
+    c.fillText("расстояние", w - 110, h - 14);
+
+    const points = [
+      { x: 0.08, y: 0.10 },
+      { x: 0.18, y: 0.15 },
+      { x: 0.30, y: 0.23 },
+      { x: 0.42, y: 0.35 },
+      { x: 0.55, y: 0.50 },
+      { x: 0.68, y: 0.68 },
+      { x: 0.82, y: 0.84 },
+      { x: 0.93, y: 0.95 }
+    ];
+
+    const mapX = v => padL + v * (w - padL - padR);
+    const mapY = v => (h - padB) - v * (h - padT - padB);
 
     c.beginPath();
-    c.moveTo(20, 300);
-    c.lineTo(100, 250);
-    c.lineTo(200, 200);
-    c.lineTo(300, 150);
-    c.lineTo(400, 80);
-    c.strokeStyle = "violet";
-    c.lineWidth = 3;
+    points.forEach((p, i) => {
+      const x = mapX(p.x);
+      const y = mapY(p.y);
+      if (i === 0) c.moveTo(x, y);
+      else c.lineTo(x, y);
+    });
+
+    const grad = c.createLinearGradient(padL, 0, w - padR, 0);
+    grad.addColorStop(0, "rgba(255,150,0,0.95)");
+    grad.addColorStop(0.5, "rgba(255,220,150,0.95)");
+    grad.addColorStop(1, "rgba(160,110,255,0.95)");
+
+    c.strokeStyle = grad;
+    c.lineWidth = 4;
     c.stroke();
+
+    points.forEach(p => {
+      const x = mapX(p.x);
+      const y = mapY(p.y);
+
+      c.beginPath();
+      c.arc(x, y, 4.5, 0, Math.PI * 2);
+      c.fillStyle = "white";
+      c.fill();
+
+      c.beginPath();
+      c.arc(x, y, 10, 0, Math.PI * 2);
+      c.fillStyle = "rgba(255,255,255,0.08)";
+      c.fill();
+    });
   }
 
-  window.addEventListener("resize", resize);
-};
+  window.addEventListener("resize", resizeSpace);
+});
 </script>
