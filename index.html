@@ -1,173 +1,188 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Phoenix A</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(180deg, #05060a 0%, #10182b 100%);
-      color: white;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phoenix A</title>
 
-    .wrap {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 40px 20px;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: white;
+  background: linear-gradient(180deg, #05060a, #0f1424);
+}
 
-    .hero, .card {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 20px;
-      padding: 24px;
-      margin-bottom: 24px;
-    }
+.wrap {
+  max-width: 1100px;
+  margin: auto;
+  padding: 20px;
+}
 
-    h1 {
-      font-size: 48px;
-      margin: 0 0 16px;
-    }
+.glass {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  backdrop-filter: blur(14px);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
 
-    h2 {
-      margin-top: 0;
-    }
+h1 { font-size: 50px; margin: 0 0 10px; }
+h2 { margin-top: 0; }
 
-    p {
-      line-height: 1.7;
-    }
+canvas {
+  width: 100%;
+  border-radius: 20px;
+  background: rgba(0,0,0,0.2);
+}
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
+.slider {
+  width: 100%;
+  margin-top: 10px;
+}
 
-    .black-hole {
-      width: 260px;
-      height: 260px;
-      margin: 30px auto;
-      border-radius: 50%;
-      background: black;
-      box-shadow: 0 0 40px rgba(140, 0, 255, 0.5);
-      position: relative;
-    }
-
-    .black-hole::before {
-      content: "";
-      position: absolute;
-      inset: -22px;
-      border-radius: 50%;
-      border: 14px solid orange;
-      opacity: 0.8;
-      transform: scaleY(0.45);
-      top: 28%;
-    }
-
-    .chart {
-      height: 260px;
-      border-radius: 16px;
-      background:
-        linear-gradient(to top, rgba(255,255,255,0.06) 1px, transparent 1px) 0 0 / 100% 25%,
-        linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px) 0 0 / 20% 100%;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .line {
-      position: absolute;
-      left: 8%;
-      right: 6%;
-      bottom: 12%;
-      height: 3px;
-      background: linear-gradient(90deg, orange, #ffd27a, violet);
-      transform: skewY(-18deg);
-      transform-origin: left bottom;
-      border-radius: 999px;
-    }
-
-    .footer {
-      text-align: center;
-      opacity: 0.7;
-      padding: 20px;
-    }
-
-    @media (max-width: 800px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
-      h1 {
-        font-size: 36px;
-      }
-
-      .black-hole {
-        width: 200px;
-        height: 200px;
-      }
-    }
-  </style>
+.stat {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+</style>
 </head>
+
 <body>
-  <div class="wrap">
-    <div class="hero">
-      <h1>Чёрная дыра и красное смещение</h1>
-      <p>
-        Этот сайт посвящён гравитационному красному смещению — эффекту, при котором
-        свет, покидая область сильной гравитации, теряет энергию, а его длина волны увеличивается.
-      </p>
-    </div>
+<div class="wrap">
 
-    <div class="card">
-      <h2>Модель чёрной дыры</h2>
-      <div class="black-hole"></div>
-      <p>
-        В центре показана стилизованная чёрная дыра. Оранжевое кольцо вокруг неё
-        изображает аккреционный диск — вещество, которое вращается вокруг массивного объекта.
-      </p>
-    </div>
+<div class="glass">
+<h1>Чёрная дыра</h1>
+<p>Двигай ползунок и смотри, как меняется фотон и график.</p>
+</div>
 
-    <div class="grid">
-      <div class="card">
-        <h2>Что это такое</h2>
-        <p>
-          Красное смещение возникает, когда свет выходит из сильного гравитационного поля.
-          Его длина волны увеличивается, и спектр смещается в красную сторону.
-        </p>
-      </div>
+<div class="glass">
+<h2>Симуляция</h2>
+<canvas id="sim" width="800" height="400"></canvas>
+<input type="range" id="slider" class="slider" min="0" max="100" value="70">
+</div>
 
-      <div class="card">
-        <h2>Почему это важно</h2>
-        <p>
-          Этот эффект подтверждает общую теорию относительности и помогает изучать
-          сверхмассивные объекты во Вселенной.
-        </p>
-      </div>
+<div class="glass">
+<h2>График</h2>
+<canvas id="graph" width="800" height="400"></canvas>
 
-      <div class="card">
-        <h2>Phoenix A</h2>
-        <p>
-          Phoenix A можно рассматривать как пример очень массивной системы,
-          рядом с которой эффекты сильной гравитации особенно наглядны.
-        </p>
-      </div>
-    </div>
+<div class="stat">
+<span>z:</span>
+<span id="z">0</span>
+</div>
 
-    <div class="card">
-      <h2>Формула и график</h2>
-      <p><b>z = Δλ / λ</b></p>
-      <p>
-        Здесь z — относительное смещение, Δλ — изменение длины волны,
-        а λ — исходная длина волны света.
-      </p>
-      <div class="chart">
-        <div class="line"></div>
-      </div>
-    </div>
-  </div>
+<div class="stat">
+<span>λ:</span>
+<span id="lambda">0</span>
+</div>
+</div>
 
-  <div class="footer">© 2026 | Проект по физике</div>
+</div>
+
+<script>
+const sim = document.getElementById("sim");
+const graph = document.getElementById("graph");
+const sctx = sim.getContext("2d");
+const gctx = graph.getContext("2d");
+const slider = document.getElementById("slider");
+
+let t = slider.value / 100;
+
+function getZ(t){
+  return Math.pow(1 - t, 2);
+}
+
+function getLambda(z){
+  return 500 + z * 500;
+}
+
+function drawSim(){
+  const w = sim.width;
+  const h = sim.height;
+  const cx = w * 0.7;
+  const cy = h / 2;
+
+  sctx.clearRect(0,0,w,h);
+
+  // черная дыра
+  sctx.beginPath();
+  sctx.arc(cx, cy, 40, 0, Math.PI*2);
+  sctx.fillStyle = "black";
+  sctx.shadowBlur = 30;
+  sctx.shadowColor = "purple";
+  sctx.fill();
+  sctx.shadowBlur = 0;
+
+  // кольцо
+  sctx.beginPath();
+  sctx.arc(cx, cy, 70, 0, Math.PI*2);
+  sctx.strokeStyle = "orange";
+  sctx.lineWidth = 8;
+  sctx.stroke();
+
+  // фотон
+  const px = 50 + (cx - 100 - 50) * t;
+  const py = cy;
+
+  sctx.beginPath();
+  sctx.arc(px, py, 6, 0, Math.PI*2);
+  sctx.fillStyle = "yellow";
+  sctx.fill();
+}
+
+function drawGraph(){
+  const w = graph.width;
+  const h = graph.height;
+
+  gctx.clearRect(0,0,w,h);
+
+  gctx.beginPath();
+
+  for(let i=0;i<=100;i++){
+    let x = i/100;
+    let z = getZ(x);
+
+    let px = 50 + x*(w-100);
+    let py = h-50 - z*(h-100);
+
+    if(i===0) gctx.moveTo(px,py);
+    else gctx.lineTo(px,py);
+  }
+
+  gctx.strokeStyle = "violet";
+  gctx.lineWidth = 3;
+  gctx.stroke();
+
+  // точка
+  let z = getZ(t);
+  let px = 50 + t*(w-100);
+  let py = h-50 - z*(h-100);
+
+  gctx.beginPath();
+  gctx.arc(px,py,6,0,Math.PI*2);
+  gctx.fillStyle="white";
+  gctx.fill();
+}
+
+function update(){
+  t += (slider.value/100 - t)*0.1;
+
+  let z = getZ(t);
+  let lambda = getLambda(z);
+
+  document.getElementById("z").innerText = z.toFixed(2);
+  document.getElementById("lambda").innerText = Math.round(lambda);
+
+  drawSim();
+  drawGraph();
+
+  requestAnimationFrame(update);
+}
+
+update();
+</script>
+
 </body>
 </html>
