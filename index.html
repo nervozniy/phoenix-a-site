@@ -1,776 +1,90 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Phoenix A — Гравитационное красное смещение</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      color: white;
-      background:
-        radial-gradient(circle at 50% 20%, rgba(120, 0, 255, 0.12), transparent 30%),
-        radial-gradient(circle at 80% 10%, rgba(255, 120, 0, 0.08), transparent 20%),
-        linear-gradient(180deg, #04050a 0%, #090b14 45%, #06070c 100%);
-      overflow-x: hidden;
-    }
-
-    canvas#space {
-      position: fixed;
-      inset: 0;
-      z-index: -3;
-    }
-
-    .stars {
-      position: fixed;
-      inset: 0;
-      z-index: -2;
-      pointer-events: none;
-      background-image:
-        radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.8), transparent 60%),
-        radial-gradient(1.5px 1.5px at 70% 20%, rgba(255,255,255,.7), transparent 60%),
-        radial-gradient(2px 2px at 40% 70%, rgba(255,255,255,.75), transparent 60%),
-        radial-gradient(1px 1px at 85% 65%, rgba(255,255,255,.6), transparent 60%),
-        radial-gradient(1.2px 1.2px at 10% 80%, rgba(255,255,255,.65), transparent 60%);
-      opacity: 0.55;
-    }
-
-    .container {
-      width: min(1120px, calc(100% - 32px));
-      margin: 0 auto;
-    }
-
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      position: relative;
-      padding: 80px 0;
-    }
-
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1.15fr 0.85fr;
-      gap: 32px;
-      align-items: center;
-    }
-
-    .glass {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.35),
-        inset 0 1px 0 rgba(255,255,255,0.08);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-radius: 24px;
-    }
-
-    .hero-card {
-      padding: 32px;
-    }
-
-    .eyebrow {
-      display: inline-block;
-      margin-bottom: 12px;
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.12);
-      font-size: 13px;
-      letter-spacing: 0.5px;
-      color: rgba(255,255,255,0.88);
-    }
-
-    h1 {
-      margin: 0 0 16px;
-      font-size: clamp(38px, 7vw, 78px);
-      line-height: 0.95;
-      letter-spacing: -1.5px;
-      text-shadow: 0 0 25px rgba(155, 80, 255, 0.18);
-    }
-
-    .hero p {
-      margin: 0;
-      font-size: 18px;
-      line-height: 1.65;
-      color: rgba(255,255,255,0.86);
-      max-width: 700px;
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-top: 28px;
-    }
-
-    .btn {
-      appearance: none;
-      border: 1px solid rgba(255,255,255,0.16);
-      border-radius: 16px;
-      padding: 14px 22px;
-      background: rgba(255,255,255,0.08);
-      color: white;
-      cursor: pointer;
-      font-size: 15px;
-      transition: 0.25s ease;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      background: rgba(255,255,255,0.14);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.28);
-    }
-
-    .hero-side {
-      padding: 24px;
-    }
-
-    .stat-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    .stat-card {
-      padding: 18px;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.10);
-    }
-
-    .stat-card h3 {
-      margin: 0 0 10px;
-      font-size: 15px;
-      color: rgba(255,255,255,0.95);
-    }
-
-    .stat-card p {
-      margin: 0;
-      font-size: 14px;
-      line-height: 1.55;
-      color: rgba(255,255,255,0.78);
-    }
-
-    section.section {
-      padding: 28px 0 44px;
-    }
-
-    .section-title {
-      font-size: clamp(28px, 4vw, 42px);
-      margin: 0 0 14px;
-    }
-
-    .section-subtitle {
-          margin: 0 0 26px;
-      color: rgba(255,255,255,0.78);
-      font-size: 17px;
-      line-height: 1.65;
-      max-width: 850px;
-    }
-
-    .cards-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-    }
-
-    .info-card {
-      padding: 22px;
-    }
-
-    .info-card h3 {
-      margin: 0 0 12px;
-      font-size: 20px;
-    }
-
-    .info-card p {
-      margin: 0;
-      color: rgba(255,255,255,0.82);
-      line-height: 1.7;
-      font-size: 15px;
-    }
-
-    .accordion {
-      display: grid;
-      gap: 12px;
-      margin-top: 10px;
-    }
-
-    .acc-item {
-      overflow: hidden;
-    }
-
-    .atitle {
-      width: 100%;
-      text-align: left;
-      padding: 18px 20px;
-      background: rgba(255,255,255,0.08);
-      color: white;
-      border: 0;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      cursor: pointer;
-      font-size: 17px;
-      font-weight: 700;
-    }
-
-    .atitle:hover {
-      background: rgba(255,255,255,0.12);
-    }
-
-    .pane {
-      display: none;
-      padding: 18px 20px 20px;
-      color: rgba(255,255,255,0.82);
-      line-height: 1.7;
-      font-size: 15px;
-      background: rgba(255,255,255,0.05);
-    }
-
-    .atitle.active + .pane {
-      display: block;
-    }
-
-    .formula-wrap {
-      display: grid;
-      grid-template-columns: 0.9fr 1.1fr;
-      gap: 18px;
-      align-items: stretch;
-    }
-
-    .formula-card,
-    .chart-card {
-      padding: 24px;
-    }
-
-    .formula-main {
-      font-size: clamp(28px, 4vw, 46px);
-      margin: 8px 0 14px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    .formula-card p,
-    .chart-card p {
-      color: rgba(255,255,255,0.8);
-      line-height: 1.7;
-      font-size: 15px;
-      margin: 0;
-    }
-
-    .chart-wrap {
-      margin-top: 18px;
-      width: 100%;
-      overflow: hidden;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    #chart {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-
-    .timeline {
-      display: grid;
-      gap: 14px;
-      margin-top: 6px;
-    }
-
-    .timeline-item {
-      padding: 18px 20px;
-    }
-
-    .timeline-item h3 {
-      margin: 0 0 8px;
-      font-size: 18px;
-    }
-
-    .timeline-item p {
-      margin: 0;
-      color: rgba(255,255,255,0.8);
-      line-height: 1.7;
-      font-size: 15px;
-    }
-
-    .footer {
-      padding: 42px 0 48px;
-      text-align: center;
-      color: rgba(255,255,255,0.6);
-      font-size: 14px;
-    }
-
-    @media (max-width: 960px) {
-      .hero-grid,
-      .cards-3,
-      .formula-wrap {
-        grid-template-columns: 1fr;
-      }
-
-      .hero {
-        min-height: auto;
-        padding-top: 110px;
-      }
-
-      .stat-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
-</head>
-<body>
-  <canvas id="space"></canvas>
-  <div class="stars"></div>
-
-  <section class="hero">
-    <div class="container hero-grid">
-      <div class="glass hero-card">
-        <div class="eyebrow">Phoenix A • физический проект</div>
-        <h1>Чёрная дыра<br>и красное смещение</h1>
-        <p>
-          Этот лендинг посвящён явлению гравитационного красного смещения —
-          изменению длины световой волны при выходе из области очень сильной гравитации.
-          На примере сверхмассивной чёрной дыры можно понять, как гравитация влияет
-          не только на движение тел, но и на сам свет.
-        </p>
-
-        <div class="hero-actions">
-          <button class="btn" onclick="document.getElementById('about').scrollIntoView()">О проекте</button>
-          <button class="btn" onclick="document.getElementById('graph').scrollIntoView()">Посмотреть график</button>
-        </div>
-      </div>
-
-      <div class="glass hero-side">
-        <div class="stat-grid">
-          <div class="stat-card">
-            <h3>Что изучается</h3>
-            <p>
-              Связь между силой гравитационного поля и изменением длины волны света.
-            </p>
-          </div>
-          <div class="stat-card">
-            <h3>Главная идея</h3>
-            <p>
-                  Чем сильнее гравитация, тем больше энергия света уменьшается при удалении.
-            </p>
-          </div>
-          <div class="stat-card">
-            <h3>Почему это важно</h3>
-            <p>
-              Это подтверждает идеи общей теории относительности и помогает изучать космос.
-            </p>
-          </div>
-          <div class="stat-card">
-            <h3>Визуальная часть</h3>
-            <p>
-              На фоне показана стилизованная модель чёрной дыры с кольцом аккреции и частицами.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="about">
-    <div class="container">
-      <h2 class="section-title">О проекте</h2>
-      <p class="section-subtitle">
-        Проект объясняет, как свет ведёт себя рядом с очень массивными объектами.
-        В обычной жизни мы не замечаем этого эффекта, но рядом с чёрными дырами,
-        нейтронными звёздами и другими сверхплотными телами он становится особенно заметным.
-        Именно поэтому красное смещение считается одним из важных эффектов современной астрофизики.
-      </p>
-
-      <div class="cards-3">
-        <div class="glass info-card">
-          <h3>Свет и энергия</h3>
-          <p>
-            Свет переносит энергию. Когда он вырывается из мощного гравитационного поля,
-            часть его энергии словно “тратится” на выход наружу. Из-за этого длина волны
-            увеличивается, а цвет смещается к красной части спектра.
-          </p>
-        </div>
-
-        <div class="glass info-card">
-          <h3>Роль гравитации</h3>
-          <p>
-            Гравитация искривляет пространство-время. Поэтому рядом с массивным объектом
-            меняются траектории движения частиц, времени и даже света. Это делает чёрные дыры
-            не просто тёмными объектами, а настоящими лабораториями экстремальной физики.
-          </p>
-        </div>
-
-        <div class="glass info-card">
-          <h3>Почему выбран Phoenix A</h3>
-          <p>
-            Phoenix A удобно использовать как образ сверхмассивной чёрной дыры:
-            такой объект хорошо подходит для объяснения сильной гравитации, аккреционного
-            диска, горизонта событий и эффектов, которые возникают рядом с центром системы.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <h2 class="section-title">Ключевые объяснения</h2>
-      <p class="section-subtitle">
-        Здесь коротко разобраны основные идеи, которые помогают понять смысл красного смещения
-        и его связь с чёрными дырами.
-      </p>
-
-      <div class="accordion">
-        <div class="glass acc-item">
-          <button class="atitle active">Что такое гравитационное красное смещение?</button>
-          <div class="pane" style="display:block;">
-            Это эффект, при котором свет, выходящий из сильного гравитационного поля,
-            увеличивает свою длину волны. Чем ближе точка излучения к массивному объекту,
-            тем сильнее проявляется этот эффект. В результате наблюдатель видит, что
-            спектральные линии как будто сдвинулись в красную сторону.
-          </div>
-        </div>
-
-        <div class="glass acc-item">
-          <button class="atitle">Почему этот эффект связан с чёрными дырами?</button>
-          <div class="pane">
-            У чёрных дыр гравитационное поле чрезвычайно велико. Если излучение возникает
-            рядом с такой областью, свету очень трудно покинуть её без потери энергии.
-            Поэтому чёрные дыры являются одним из лучших примеров для демонстрации
-            гравитационного красного смещения.
-          </div>
-        </div>
-
-        <div class="glass acc-item">
-          <button class="atitle">Как это связано с общей теорией относительности?</button>
-          <div class="pane">
-            Общая теория относительности утверждает, что масса и энергия искривляют
-            пространство-время. Свет движется в этом искривлённом пространстве, поэтому
-            его поведение рядом с массивными телами меняется.
-                Красное смещение —
-            одно из наблюдаемых следствий этой идеи.
-          </div>
-        </div>
-
-        <div class="glass acc-item">
-          <button class="atitle">Где это используется в науке?</button>
-          <div class="pane">
-            Такие эффекты помогают исследовать плотные космические объекты, сравнивать
-            теорию с наблюдениями, анализировать спектры и делать выводы о свойствах
-            далёких источников излучения. Это важный инструмент астрофизики.
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="graph">
-    <div class="container">
-      <h2 class="section-title">Формула и график</h2>
-      <p class="section-subtitle">
-        Ниже показана упрощённая формула и схематичный график: по мере приближения к массивному
-        объекту относительное смещение увеличивается. График здесь нужен как наглядная модель,
-        чтобы проще увидеть общую зависимость.
-      </p>
-
-      <div class="formula-wrap">
-        <div class="glass formula-card">
-          <div class="eyebrow">Базовая запись</div>
-          <div class="formula-main">z = Δλ / λ</div>
-          <p>
-            Здесь <b>z</b> — относительное смещение, <b>Δλ</b> — изменение длины волны,
-            а <b>λ</b> — исходная длина волны. Если свет при выходе из гравитационного поля
-            растягивается, его длина волны становится больше, а значение z возрастает.
-          </p>
-        </div>
-
-        <div class="glass chart-card">
-          <div class="eyebrow">Наглядная схема</div>
-          <p>
-            По горизонтали показано расстояние от центра массивного объекта,
-            а по вертикали — условная величина красного смещения.
-          </p>
-
-          <div class="chart-wrap">
-            <canvas id="chart" width="720" height="380"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <h2 class="section-title">Этапы понимания явления</h2>
-      <p class="section-subtitle">
-        Чтобы объяснить эффект последовательно, удобно разбить его на несколько шагов.
-      </p>
-
-      <div class="timeline">
-        <div class="glass timeline-item">
-          <h3>1. Возникновение излучения</h3>
-          <p>
-            Свет рождается вблизи массивного объекта — например, в горячем веществе,
-            окружающем чёрную дыру. Эта область обладает сильным гравитационным полем.
-          </p>
-        </div>
-
-        <div class="glass timeline-item">
-          <h3>2. Выход из гравитационной ямы</h3>
-          <p>
-            По мере удаления от центра свет теряет часть своей энергии. При этом
-            частота уменьшается, а длина волны увеличивается.
-          </p>
-        </div>
-
-        <div class="glass timeline-item">
-          <h3>3. Наблюдение эффекта</h3>
-          <p>
-            На большом расстоянии наблюдатель получает уже изменённый сигнал.
-            Это позволяет судить о силе гравитации и свойствах объекта, откуда
-            пришло излучение.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <div class="footer">
-    © 2026 | Проект по физике
-  </div>
-
-  <script>
-    const canvas = document.getElementById("space");
-    const ctx = canvas.getContext("2d");
-
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    resizeCanvas();
-
-    const particles = [];
-    const count = 520;
-
-    for (let i = 0; i < count; i++) {
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        angle: Math.random() * Math.PI * 2,
-        speed: 0.25 + Math.random() * 0.45,
-        radius: 0.8 + Math.random() * 1.6
-      });
-    }
-
-    function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2 - 80;
-
-      ctx.fillStyle = "rgba(5, 7, 12, 0.24)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      particles.forEach(p => {
-        const dx = cx - p.x;
-            const dy = cy - p.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        p.angle += 0.02;
-        p.x += Math.cos(p.angle) * p.speed + dx * 0.0008;
-        p.y += Math.sin(p.angle) * p.speed + dy * 0.0008;
-
-        if (dist < 44) {
-          p.x = Math.random() * canvas.width;
-          p.y = Math.random() * canvas.height;
-        }
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(255,255,255,0.78)";
-        ctx.fill();
-      });
-
-      const halo = ctx.createRadialGradient(cx, cy, 30, cx, cy, 160);
-      halo.addColorStop(0, "rgba(120,0,255,0)");
-      halo.addColorStop(0.55, "rgba(133,70,255,0.16)");
-      halo.addColorStop(1, "rgba(133,70,255,0)");
-      ctx.beginPath();
-      ctx.arc(cx, cy, 160, 0, Math.PI * 2);
-      ctx.fillStyle = halo;
-      ctx.fill();
-
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(Date.now() * 0.00045);
-      ctx.scale(1.95, 0.5);
-
-      const ring = ctx.createRadialGradient(0, 0, 32, 0, 0, 92);
-      ring.addColorStop(0, "rgba(255,160,0,0)");
-      ring.addColorStop(0.34, "rgba(255,120,0,0.86)");
-      ring.addColorStop(0.5, "rgba(255,220,140,0.98)");
-      ring.addColorStop(0.72, "rgba(255,100,0,0.68)");
-      ring.addColorStop(1, "rgba(255,100,0,0)");
+<script>
+window.onload = function () {
+
+  const canvas = document.getElementById("space");
+  const ctx = canvas.getContext("2d");
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+
+  let particles = [];
+
+  for (let i = 0; i < 300; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      angle: Math.random() * Math.PI * 2
+    });
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    let cx = canvas.width / 2;
+    let cy = canvas.height / 2;
+
+    // частицы
+    particles.forEach(p => {
+      let dx = cx - p.x;
+      let dy = cy - p.y;
+
+      p.angle += 0.02;
+      p.x += Math.cos(p.angle) + dx * 0.0005;
+      p.y += Math.sin(p.angle) + dy * 0.0005;
 
       ctx.beginPath();
-      ctx.arc(0, 0, 92, 0, Math.PI * 2);
-      ctx.fillStyle = ring;
+      ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = "white";
       ctx.fill();
-      ctx.restore();
-
-      ctx.beginPath();
-      ctx.arc(cx, cy, 50, 0, Math.PI * 2);
-      ctx.fillStyle = "#000";
-      ctx.shadowBlur = 26;
-      ctx.shadowColor = "rgba(130, 80, 255, 0.75)";
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      requestAnimationFrame(animate);
-    }
-    animate();
-
-    document.querySelectorAll(".atitle").forEach(title => {
-      title.addEventListener("click", () => {
-        document.querySelectorAll(".atitle").forEach(t => t.classList.remove("active"));
-        document.querySelectorAll(".pane").forEach(p => p.style.display = "none");
-
-        title.classList.add("active");
-        title.nextElementSibling.style.display = "block";
-      });
     });
 
-    window.addEventListener("resize", resizeCanvas);
+    // чёрная дыра
+    ctx.beginPath();
+    ctx.arc(cx, cy, 60, 0, Math.PI * 2);
+    ctx.fillStyle = "black";
+    ctx.fill();
 
-    const chart = document.getElementById("chart");
-    const cctx = chart.getContext("2d");
+    // кольцо
+    ctx.beginPath();
+    ctx.arc(cx, cy, 90, 0, Math.PI * 2);
+    ctx.strokeStyle = "orange";
+    ctx.lineWidth = 8;
+    ctx.stroke();
 
-    function drawChart() {
-      const w = chart.width;
-      const h = chart.height;
+    requestAnimationFrame(animate);
+  }
 
-      cctx.clearRect(0, 0, w, h);
+  animate();
 
-      const padL = 60;
-      const padR = 26;
-      const padT = 28;
-      const padB = 46;
+  // АККОРДЕОН (кнопки)
+  document.querySelectorAll(".atitle").forEach(title => {
+    title.addEventListener("click", () => {
+      const pane = title.nextElementSibling;
 
-      cctx.fillStyle = "rgba(255,255,255,0.02)";
-      cctx.fillRect(0, 0, w, h);
+      document.querySelectorAll(".pane").forEach(p => p.style.display = "none");
+      pane.style.display = "block";
+    });
+  });
 
-      cctx.strokeStyle = "rgba(255,255,255,0.08)";
-      cctx.lineWidth = 1;
+  // ГРАФИК
+  const chart = document.getElementById("chart");
+  if (chart) {
+    const c = chart.getContext("2d");
 
-      for (let i = 0; i < 5; i++) {
-        const y = padT + ((h - padT - padB) / 4) * i;
-        cctx.beginPath();
-        cctx.moveTo(padL, y);
-        cctx.lineTo(w - padR, y);
-        cctx.stroke();
-      }
+    c.beginPath();
+    c.moveTo(20, 300);
+    c.lineTo(100, 250);
+    c.lineTo(200, 200);
+    c.lineTo(300, 150);
+    c.lineTo(400, 80);
+    c.strokeStyle = "violet";
+    c.lineWidth = 3;
+    c.stroke();
+  }
 
-      for (let i = 0; i < 6; i++) {
-        const x = padL + ((w - padL - padR) / 5) * i;
-        cctx.beginPath();
-        cctx.moveTo(x, padT);
-        cctx.lineTo(x, h - padB);
-        cctx.stroke();
-      }
-
-      cctx.strokeStyle = "rgba(255,255,255,0.38)";
-      cctx.lineWidth = 1.4;
-      cctx.beginPath();
-      cctx.moveTo(padL, padT);
-      cctx.lineTo(padL, h - padB);
-      cctx.lineTo(w - padR, h - padB);
-      cctx.stroke();
-
-      cctx.fillStyle = "rgba(255,255,255,0.78)";
-      cctx.font = "14px Arial";
-      cctx.fillText("z", 24, padT + 4);
-      cctx.fillText("расстояние от центра", w - 170, h - 14);
-
-      const points = [
-        { x: 0.06, y: 0.12 },
-        { x: 0.16, y: 0.18 },
-        { x: 0.27, y: 0.26 },
-        { x: 0.40, y: 0.38 },
-        { x: 0.53, y: 0.54 },
-        { x: 0.66, y: 0.70 },
-        { x: 0.80, y: 0.86 },
-        { x: 0.92, y: 0.95 }
-      ];
-
-      const mapX = v => padL + v * (w - padL - padR);
-      const mapY = v => (h - padB) - v * (h - padT - padB);
-
-      const gradient = cctx.createLinearGradient(padL, 0, w - padR, 0);
-      gradient.addColorStop(0, "rgba(255,160,0,0.85)");
-      gradient.addColorStop(0.5, "rgba(255,220,160,0.95)");
-      gradient.addColorStop(1, "rgba(165,110,255,0.
-                            95)");
-
-      cctx.strokeStyle = gradient;
-      cctx.lineWidth = 4;
-      cctx.beginPath();
-
-      points.forEach((p, i) => {
-        const x = mapX(p.x);
-        const y = mapY(p.y);
-        if (i === 0) cctx.moveTo(x, y);
-        else cctx.lineTo(x, y);
-      });
-
-      cctx.stroke();
-
-      cctx.lineTo(mapX(points[points.length - 1].x), h - padB);
-      cctx.lineTo(mapX(points[0].x), h - padB);
-      cctx.closePath();
-
-      const area = cctx.createLinearGradient(0, padT, 0, h - padB);
-      area.addColorStop(0, "rgba(170,120,255,0.22)");
-      area.addColorStop(1, "rgba(170,120,255,0.02)");
-      cctx.fillStyle = area;
-      cctx.fill();
-
-      points.forEach(p => {
-        const x = mapX(p.x);
-        const y = mapY(p.y);
-
-        cctx.beginPath();
-        cctx.arc(x, y, 4.5, 0, Math.PI * 2);
-        cctx.fillStyle = "rgba(255,255,255,0.95)";
-        cctx.fill();
-
-        cctx.beginPath();
-        cctx.arc(x, y, 10, 0, Math.PI * 2);
-        cctx.fillStyle = "rgba(255,255,255,0.08)";
-        cctx.fill();
-      });
-
-      cctx.fillStyle = "rgba(255,255,255,0.65)";
-      cctx.font = "13px Arial";
-      cctx.fillText("далеко", padL + 4, h - 20);
-      cctx.fillText("ближе к сильной гравитации", w - 210, h - 20);
-    }
-
-    drawChart();
-  </script>
-</body>
-</html>
+  window.addEventListener("resize", resize);
+};
+</script>
