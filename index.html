@@ -599,7 +599,7 @@
     }
 
     function photonGlowColor(t) {
-      const c = easeInOut(1 - t);
+      const c = easeInOut(t);
       const r = Math.round(lerp(255, 255, c));
       const g = Math.round(lerp(220, 80, c));
       const b = Math.round(lerp(130, 80, c));
