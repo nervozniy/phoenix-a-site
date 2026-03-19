@@ -576,16 +576,16 @@
     }
 
     function getGravityLabel(z) {
-      if (z < 0.25) return "слабое";
-      if (z < 0.55) return "среднее";
-      if (z < 0.8) return "сильное";
+      if (z < 0.8) return "слабое";
+      if (z < 0.5) return "среднее";
+      if (z < 0.2) return "сильное";
       return "очень сильное";
     }
 
     function getDistanceLabel(t) {
-      if (t > 0.2) return "Далеко от центра";
-      if (t > 0.5) return "Средняя область";
-      if (t > 0.7) return "Близко к центру";
+      if (t < 0.2) return "Далеко от центра";
+      if (t < 0.5) return "Средняя область";
+      if (t < 0.7) return "Близко к центру";
       return "Очень близко к горизонту";
     }
 
