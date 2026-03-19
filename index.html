@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Phoenix A 3D</title>
+<title>Black Hole FINAL</title>
 
 <style>
 body{
@@ -22,12 +22,13 @@ body{
   width:90%;
   max-width:400px;
 
-  backdrop-filter:blur(20px);
+  backdrop-filter:blur(25px);
   background:rgba(255,255,255,0.1);
   border-radius:15px;
   padding:15px;
   color:white;
 }
+
 input{ width:100%; }
 </style>
 </head>
@@ -36,44 +37,72 @@ input{ width:100%; }
 
 <div id="ui">
 Положение фотона
-<input id="slider" type="range" min="0" max="100" value="80">
+<input id="slider" type="range" min="0" max="100" value="70">
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 
 <script>
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);
-const renderer = new THREE.WebGLRenderer({antialias:true});
 
+const camera = new THREE.PerspectiveCamera(70,innerWidth/innerHeight,0.1,1000);
+camera.position.z = 7;
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
 // свет
-const light = new THREE.PointLight(0xffffff,2);
+const light = new THREE.PointLight(0xffffff,4);
 light.position.set(5,5,5);
 scene.add(light);
 
-// черная дыра
-const holeGeo = new THREE.SphereGeometry(1.2,64,64);
-const holeMat = new THREE.MeshBasicMaterial({color:0x000000});
-const hole = new THREE.Mesh(holeGeo,holeMat);
+// чёрная дыра
+const hole = new THREE.Mesh(
+  new THREE.SphereGeometry(1.6,64,64),
+  new THREE.MeshBasicMaterial({color:0x000000})
+);
 scene.add(hole);
 
 // диск
-const ringGeo = new THREE.TorusGeometry(2,0.4,16,100);
-const ringMat = new THREE.MeshBasicMaterial({color:0xff8800});
-const ring = new THREE.Mesh(ringGeo,ringMat);
+const ring = new THREE.Mesh(
+  new THREE.TorusGeometry(3.2,0.6,32,200),
+  new THREE.MeshStandardMaterial({
+    color:0xffaa33,
+    emissive:0xff5500,
+    emissiveIntensity:3
+  })
+);
 ring.rotation.x = Math.PI/2;
 scene.add(ring);
 
-// фотон
-const photonGeo = new THREE.SphereGeometry(0.2,32,32);
-const photonMat = new THREE.MeshBasicMaterial({color:0xffffaa});
-const photon = new THREE.Mesh(photonGeo,photonMat);
-scene.add(photon);
+// звезды
+let stars = [];
+for(let i=0;i<400;i++){
+  const star = new THREE.Mesh(
+    new THREE.SphereGeometry(0.03),
+    new THREE.MeshBasicMaterial({color:0xffffff})
+  );
+  star.position.set(
+    (Math.random()-0.5)*80,
+    (Math.random()-0.5)*80,
+    (Math.random()-0.5)*80
+  );
+  scene.add(star);
+  stars.push(star);
+}
 
-camera.position.z = 6;
+// фотон
+const photon = new THREE.Mesh(
+  new THREE.SphereGeometry(0.2,32,32),
+  new THREE.MeshStandardMaterial({
+    color:0xffffaa,
+    emissive:0xffaa55,
+    emissiveIntensity:3
+  })
+);
+scene.add(photon);
 
 const slider = document.getElementById("slider");
 
@@ -83,20 +112,54 @@ function animate(){
   let t = slider.value/100;
 
   // вращение
-  ring.rotation.z += 0.01;
+  ring.rotation.z += 0.02;
 
-  // движение фотона
-  photon.position.x = -4 + t*3;
-  photon.position.y = Math.sin(t*3)*0.5;
+  // искажение ВСЕГО пространства
+  stars.forEach(star=>{
+    let dx = star.position.x;
+    let dy = star.position.y;
+    let dz = star.position.z;
+
+    let dist = Math.sqrt(dx*dx+dy*dy+dz*dz);
+
+    let warp = 5/(dist+2);
+
+    star.position.x += -dx*warp*0.02*(1-t);
+    star.position.y += -dy*warp*0.02*(1-t);
+  });
+
+  // фотон (линзирование)
+  let curve = Math.pow(1-t,2);
+
+  photon.position.x = -6 + t*5;
+  photon.position.y = Math.sin(t*4)*curve*2;
 
   // красное смещение
   let r = 1;
-  let g = 1 - (1-t)*0.7;
-  let b = 0.7 - (1-t)*0.5;
-  photon.material.color.setRGB(r,g,b);
+  let g = 1 - (1-t)*0.9;
+  let b = 0.4 - (1-t)*0.4;
 
-  // камера плавно приближается
-  camera.position.z = 6 - (1-t)*2;
+  photon.material.color.setRGB(r,g,b);
+  photon.material.emissive.setRGB(r*0.8,g*0.2,b*0.1);
+
+  // растяжение
+  if(t < 0.2){
+    photon.scale.set(
+      1+(0.2-t)*8,
+      1-(0.2-t)*3,
+      1
+    );
+  }
+
+  // горизонт событий (исчезновение)
+  if(t < 0.1){
+    photon.visible = false;
+  } else {
+    photon.visible = true;
+  }
+
+  // камера эффект
+  camera.position.z = 7 - (1-t)*3;
 
   renderer.render(scene,camera);
 }
