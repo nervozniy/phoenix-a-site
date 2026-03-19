@@ -768,15 +768,6 @@
       sctx.fill();
 
       sctx.beginPath();
-      const dxp = photonX - cx;
-const dyp = photonY - cy;
-const distPhoton = Math.sqrt(dxp * dxp + dyp * dyp);
-
-// исчезновение у горизонта
-let fade = 1;
-if (distPhoton < eventHorizon * 1.5) {
-  fade = distPhoton / (eventHorizon * 1.5);
-}
       sctx.arc(photonX, photonY, 6, 0, Math.PI * 2);
       sctx.fillStyle = color;
       sctx.fill();
