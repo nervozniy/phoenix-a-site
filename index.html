@@ -179,24 +179,3 @@ function drawGraph(){
 
   gctx.beginPath();
   gctx.arc(px,py,6,0,Math.
-           PI*2);
-  gctx.fillStyle=photonColor(smoothT);
-  gctx.fill();
-}
-
-function animate(){
-  targetT = slider.value/100;
-  smoothT = lerp(smoothT,targetT,0.08);
-  time+=0.016;
-
-  drawSim();
-  drawGraph();
-
-  requestAnimationFrame(animate);
-}
-
-animate();
-</script>
-
-</body>
-</html>
