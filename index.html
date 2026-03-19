@@ -567,10 +567,9 @@
       return t * t * (3 - 2 * t);
     }
 
-    function getZ(t) {
-      const inv = 1 - t;
-      return 0.04 + Math.pow(inv, 2.15) * 0.96;
-    }
+  function getZ(t) {
+  return 0.04 + Math.pow(t, 2.15) * 0.96;
+}
 
     function getLambda(z) {
       return 520 + z * 520;
