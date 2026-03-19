@@ -1,938 +1,269 @@
-<!-- v4 update -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Phoenix A — Гравитационное красное смещение</title>
-  <style>
-    * { box-sizing: border-box; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phoenix A — Красное смещение</title>
 
-    :root {
-      --bg-1: #03050b;
-      --bg-2: #0b1222;
-      --glass: rgba(255,255,255,0.07);
-      --glass-border: rgba(255,255,255,0.14);
-      --text: rgba(255,255,255,0.95);
-      --muted: rgba(255,255,255,0.74);
-      --orange: #ff9b2f;
-      --gold: #ffd67f;
-      --violet: #9f6dff;
-      --blue: #7bd8ff;
-      --red: #ff5b4d;
-    }
+<style>
+*{box-sizing:border-box}
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 50% 10%, rgba(150, 100, 255, 0.16), transparent 24%),
-        radial-gradient(circle at 85% 15%, rgba(255, 120, 60, 0.08), transparent 20%),
-        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
-      overflow-x: hidden;
-    }
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+  background:linear-gradient(180deg,#03050b,#0b1222);
+  color:white;
+}
 
-    .stars-bg {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      opacity: 0.5;
-      background-image:
-        radial-gradient(2px 2px at 12% 22%, rgba(255,255,255,0.85), transparent 60%),
-        radial-gradient(1.5px 1.5px at 28% 78%, rgba(255,255,255,0.72), transparent 60%),
-        radial-gradient(2px 2px at 74% 30%, rgba(255,255,255,0.78), transparent 60%),
-        radial-gradient(1.4px 1.4px at 61% 64%, rgba(255,255,255,0.7), transparent 60%),
-        radial-gradient(1px 1px at 92% 75%, rgba(255,255,255,0.62), transparent 60%),
-        radial-gradient(1.6px 1.6px at 42% 12%, rgba(255,255,255,0.68), transparent 60%),
-        radial-gradient(1.4px 1.4px at 53% 85%, rgba(255,255,255,0.65), transparent 60%);
-      animation: starDrift 38s linear infinite;
-    }
+.wrap{
+  max-width:1200px;
+  margin:auto;
+  padding:20px;
+}
 
-    @keyframes starDrift {
-      from { transform: translateY(0); }
-      to { transform: translateY(-42px); }
-    }
+.glass{
+  background:rgba(255,255,255,0.07);
+  backdrop-filter:blur(18px);
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,0.1);
+  padding:20px;
+}
 
-    .wrap {
-      position: relative;
-      z-index: 1;
-      max-width: 1160px;
-      margin: 0 auto;
-      padding: 20px 16px 42px;
-    }
+h1{
+  font-size:48px;
+  margin:0 0 10px;
+}
 
-    .glass {
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-radius: 24px;
-      box-shadow: 0 16px 42px rgba(0,0,0,0.28);
-    }
+h2{margin-top:0}
 
-    .hero {
-      padding: 28px;
-      margin-bottom: 22px;
-    }
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
 
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1.08fr 0.92fr;
-      gap: 20px;
-      align-items: center;
-    }
+canvas{
+  width:100%;
+  height:100%;
+}
 
-    .eyebrow {
-      display: inline-block;
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.11);
-      font-size: 13px;
-      margin-bottom: 14px;
-      color: rgba(255,255,255,0.86);
-    }
+.scene{
+  height:420px;
+}
 
-    h1 {
-      margin: 0 0 12px;
-      font-size: clamp(38px, 7vw, 76px);
-      line-height: 0.95;
-      letter-spacing: -1px;
-    }
+.slider{
+  width:100%;
+  margin-top:10px;
+}
 
-    h2 {
-      margin: 0 0 12px;
-      font-size: clamp(28px, 4vw, 40px);
-    }
-
-    h3 {
-      margin: 0 0 10px;
-      font-size: 20px;
-    }
-
-    p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.76;
-    }
-
-    .hero p {
-      max-width: 700px;
-      font-size: 17px;
-    }
-
-    .hero-buttons {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 22px;
-    }
-
-    .btn {
-      border: 1px solid rgba(255,255,255,0.16);
-      background: rgba(255,255,255,0.09);
-      color: white;
-      padding: 13px 18px;
-      border-radius: 16px;
-      cursor: pointer;
-      font-size: 15px;
-      transition: transform .22s ease, background .22s ease, box-shadow .22s ease;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      background: rgba(255,255,255,0.14);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.22);
-    }
-
-    .hero-side {
-      padding: 18px;
-    }
-
-    .mini-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .mini-card {
-      padding: 16px;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-    }.mini-card strong {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 15px;
-    }
-
-    .mini-card span {
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.55;
-    }
-
-    .section {
-      margin-bottom: 22px;
-      padding: 24px;
-    }
-
-    .section-lead {
-      margin-bottom: 18px;
-      max-width: 900px;
-    }
-
-    .simulation-grid {
-      display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
-      gap: 20px;
-      align-items: start;
-    }
-
-    .scene-wrap {
-      position: relative;
-      height: 470px;
-      border-radius: 22px;
-      overflow: hidden;
-      background:
-        radial-gradient(circle at 50% 45%, rgba(120,0,255,0.12), transparent 18%),
-        linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.03));
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    #simCanvas {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    .control-panel {
-      margin-top: 16px;
-      padding: 18px;
-      border-radius: 20px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .control-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-
-    .value-pill {
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: rgba(255,255,255,0.92);
-      font-size: 14px;
-    }
-
-    .slider {
-      width: 100%;
-      appearance: none;
-      height: 10px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,91,77,0.5));
-      outline: none;
-    }
-
-    .slider::-webkit-slider-thumb {
-      appearance: none;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--gold), var(--red));
-      border: 2px solid rgba(255,255,255,0.75);
-      box-shadow: 0 0 18px rgba(255,91,77,0.45);
-      cursor: pointer;
-    }
-
-    .slider::-moz-range-thumb {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--gold), var(--red));
-      border: 2px solid rgba(255,255,255,0.75);
-      box-shadow: 0 0 18px rgba(255,91,77,0.45);
-      cursor: pointer;
-    }
-
-    .legend {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-      color: rgba(255,255,255,0.76);
-      font-size: 14px;
-    }
-
-    .legend-dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 8px;
-      vertical-align: middle;
-    }
-
-    .info-stack {
-      display: grid;
-      gap: 16px;
-    }
-
-    .info-card {
-      padding: 18px;
-    }
-
-    .chart-wrap {
-      margin-top: 18px;
-      border-radius: 22px;
-      overflow: hidden;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    #graphCanvas {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-
-    .stats-line {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .stat {
-      padding: 14px;
-      border-radius: 16px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .stat small {
-      display: block;
-      color: rgba(255,255,255,0.64);
-      margin-bottom: 8px;
-      font-size: 12px;
-    }
-
-    .stat strong {
-      font-size: 18px;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-
-    .card {
-      padding: 20px;
-    }
-
-    .footer {
-      text-align: center;
-      padding: 8px 0 18px;
-      color: rgba(255,255,255,0.6);
-      font-size: 14px;
-    }
-
-    @media (max-width: 960px) {
-      .hero-grid,
-      .simulation-grid,
-      .cards {
-        grid-template-columns: 1fr;
-      }
-
-      .mini-stats,
-      .stats-line {
-        grid-template-columns: 1fr;
-      }.scene-wrap {
-        height: 380px;
-      }
-    }
-  </style>
+@media(max-width:900px){
+  .grid{grid-template-columns:1fr}
+}
+</style>
 </head>
+
 <body>
-  <div class="stars-bg"></div>
 
-  <div class="wrap">
-    <section class="hero glass">
-      <div class="hero-grid">
-        <div>
-          <div class="eyebrow">Phoenix A • визуализация сильной гравитации</div>
-          <h1>Чёрная дыра,<br>фотон и красное смещение</h1>
-          <p>
-            Эта интерактивная модель показывает идею гравитационного красного смещения.
-            Когда фотон оказывается ближе к очень массивному объекту, его излучение сильнее
-            испытывает влияние гравитации. Визуально это отображается двумя способами:
-            фотон становится более красным, а график показывает рост условного значения смещения z.
-          </p>
-          <div class="hero-buttons">
-            <button class="btn" onclick="document.getElementById('sim').scrollIntoView({behavior:'smooth'})">Открыть симуляцию</button>
-            <button class="btn" onclick="document.getElementById('theory').scrollIntoView({behavior:'smooth'})">Читать теорию</button>
-          </div>
-        </div>
+<div class="wrap">
 
-        <div class="hero-side glass">
-          <div class="mini-stats">
-            <div class="mini-card">
-              <strong>Цвет фотона</strong>
-              <span>При приближении к чёрной дыре он плавно меняется от светло-золотого к оранжево-красному.</span>
-            </div>
-            <div class="mini-card">
-              <strong>Искривление пространства</strong>
-              <span>Сетка вокруг центра деформируется, показывая условное искривление пространства-времени.</span>
-            </div>
-            <div class="mini-card">
-              <strong>График</strong>
-              <span>Маркер на графике движется вместе с фотоном и показывает изменение относительного смещения z.</span>
-            </div>
-            <div class="mini-card">
-              <strong>Смысл модели</strong>
-              <span>Чем сильнее гравитация, тем больше энергия фотона изменяется при движении из глубины поля.</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+<div class="glass">
+<h1>Гравитационное красное смещение</h1>
+<p>Фотон при приближении к чёрной дыре краснеет и его траектория искривляется.</p>
+</div>
 
-    <section class="section glass" id="sim">
-      <h2>Интерактивная симуляция</h2>
-      <p class="section-lead">
-        Передвигай ползунок. Фотон будет приближаться к чёрной дыре, менять цвет на более красный
-        и одновременно с этим менять положение точки на графике. Анимация аккреционного кольца,
-        световые дуги и искажённая сетка делают сцену более живой и похожей на космическую визуализацию.
-      </p>
+<div class="grid">
 
-      <div class="simulation-grid">
-        <div>
-          <div class="scene-wrap">
-            <canvas id="simCanvas" width="760" height="470"></canvas>
-          </div>
+<div class="glass">
+<h2>Симуляция</h2>
 
-          <div class="control-panel">
-            <div class="control-top">
-              <strong>Положение фотона</strong>
-              <div class="value-pill"><span id="distanceText">Далеко от центра</span></div>
-            </div>
-            <input id="photonSlider" class="slider" type="range" min="0" max="100" value="78">
-            <div class="legend">
-              <span><span class="legend-dot" style="background:#ffd67f;"></span>фотон</span>
-              <span><span class="legend-dot" style="background:#ff9b2f;"></span>аккреционный диск</span>
-              <span><span class="legend-dot" style="background:#9f6dff;"></span>гравитационное поле</span>
-              <span><span class="legend-dot" style="background:#ff5b4d;"></span>красное смещение</span>
-            </div>
-          </div>
-        </div>
+<div class="scene">
+<canvas id="sim"></canvas>
+</div>
 
-        <div class="info-stack">
-          <div class="info-card glass">
-            <h3>Что показывает цвет</h3>
-            <p>
-              Когда фотон находится дальше от центра, его цвет ближе к светло-жёлтому. По мере
-              приближения к области сильной гравитации оттенок становится оранжевым и затем красноватым.
-              Это визуальная метафора красного смещения: длина волны увеличивается, а наблюдаемое
-              излучение “сдвигается” к красной области спектра.
-            </p>
-          </div>
+<input id="slider" class="slider" type="range" min="0" max="100" value="70">
 
-          <div class="info-card glass"><h3>Что показывает искривление</h3>
-            <p>
-              Деформированная сетка вокруг чёрной дыры нужна не для точного расчёта, а для наглядности.
-              Она показывает, что рядом с массивным объектом пространство-время больше не является
-              “плоским”. Именно поэтому траектории света и поведение излучения рядом с таким объектом
-              отличаются от обычных условий.
-            </p>
-          </div>
+</div>
 
-          <div class="info-card glass">
-            <h3>Формула</h3>
-            <p>
-              <strong>z = Δλ / λ</strong><br>
-              z — относительное красное смещение, Δλ — изменение длины волны, λ — исходная длина волны.
-              В данной модели рост z показан плавным перемещением точки на графике и изменением цвета фотона.
-            </p>
-          </div>
-        </div>
-      </div>
+<div class="glass">
+<h2>График</h2>
+<canvas id="graph" height="300"></canvas>
+</div>
 
-      <div class="chart-wrap">
-        <canvas id="graphCanvas" width="1040" height="430"></canvas>
-      </div>
+</div>
 
-      <div class="stats-line">
-        <div class="stat">
-          <small>Относительное смещение</small>
-          <strong id="zValue">0.18</strong>
-        </div>
-        <div class="stat">
-          <small>Условная длина волны</small>
-          <strong id="lambdaValue">612 нм</strong>
-        </div>
-        <div class="stat">
-          <small>Гравитационное влияние</small>
-          <strong id="gravityValue">среднее</strong>
-        </div>
-      </div>
-    </section>
+</div>
 
-    <section class="section glass" id="theory">
-      <h2>Дополнительная информация</h2>
-      <p class="section-lead">
-        Гравитационное красное смещение является следствием общей теории относительности.
-        Оно показывает, что сильная гравитация влияет не только на движение массивных тел,
-        но и на само излучение. Чем ближе свет рождается к массивному объекту, тем сильнее
-        изменяются его наблюдаемые характеристики. Такие эффекты важны в астрофизике,
-        потому что позволяют судить о свойствах нейтронных звёзд, чёрных дыр и других
-        экстремальных объектов по спектру приходящего к нам света.
-      </p>
+<script>
+const sim = document.getElementById("sim");
+const ctx = sim.getContext("2d");
 
-      <div class="cards">
-        <div class="card glass">
-          <h3>Чёрная дыра</h3>
-          <p>
-            Это область пространства-времени, где гравитация настолько сильна, что после
-            пересечения горизонта событий уже ничто не может свободно покинуть её. Именно поэтому
-            чёрные дыры служат наглядным примером экстремальной гравитации.
-          </p>
-        </div>
-        <div class="card glass">
-          <h3>Фотон</h3>
-          <p>
-            Фотон — квант света. У него нет массы покоя, но его энергия и частота не являются
-            “неуязвимыми” для гравитации. При выходе из глубокой гравитационной ямы частота уменьшается,
-            а длина волны увеличивается.
-          </p>
-        </div>
-        <div class="card glass">
-          <h3>Почему это видно на графике</h3>
-          <p>
-            График показывает не реальный каталог наблюдений, а учебную зависимость: при уменьшении
-            расстояния до центра значение z растёт. Это помогает связать абстрактную формулу с визуальной
-            картиной и сделать физический смысл явления более понятным.
-          </p>
-        </div>
-      </div>
-    </section>
+const graph = document.getElementById("graph");
+const gctx = graph.getContext("2d");
 
-    <div class="footer">© 2026 | Интерактивный проект по физике</div>
-  </div>
+const slider = document.getElementById("slider");
 
-  <script>
-    const slider = document.getElementById("photonSlider");
-    const simCanvas = document.getElementById("simCanvas");
-    const graphCanvas = document.getElementById("graphCanvas");
-    const sctx = simCanvas.getContext("2d");
-    const gctx = graphCanvas.getContext("2d");
+function resize(){
+  sim.width = sim.clientWidth;
+  sim.height = sim.clientHeight;
+}
+resize();
+window.addEventListener("resize",resize);
 
-    const zValue = document.getElementById("zValue");
-    const lambdaValue = document.getElementById("lambdaValue");
-    const gravityValue = document.getElementById("gravityValue");
-    const distanceText = document.getElementById("distanceText");
+let t = slider.value/100;
+let target = t;
+let time=0;
 
-    let targetT = Number(slider.value) / 100;
-    let smoothT = targetT;
-    let ringAngle = 0;
-    let time = 0;
+function lerp(a,b,t){return a+(b-a)*t;}
+function ease(x){return x*x*(3-2*x);}
 
-    const stars = Array.from({ length: 110 }, () => ({
-      x: Math.random() * simCanvas.width,y: Math.random() * simCanvas.height,
-      r: 0.5 + Math.random() * 1.8,
-      a: 0.3 + Math.random() * 0.55
-    }));
+function getZ(t){
+  return 0.05 + Math.pow(t,2.2)*0.95;
+}
 
-    function lerp(a, b, t) {
-      return a + (b - a) * t;
+function photonColor(t){
+  let c=ease(t);
+  let r=255;
+  let g=230-c*180;
+  let b=180-c*140;
+  return rgb(${r},${g},${b});
+}
+
+function draw(){
+
+  let w=sim.width;
+  let h=sim.height;
+
+  ctx.clearRect(0,0,w,h);
+
+  let cx=w*0.65;
+  let cy=h*0.55;
+
+  // сетка
+  ctx.strokeStyle="rgba(120,150,255,0.15)";
+
+  for(let y=50;y<h;y+=30){
+    ctx.beginPath();
+    for(let x=0;x<w;x+=10){
+      let dx=x-cx;
+      let dy=y-cy;
+      let d=Math.sqrt(dx*dx+dy*dy);
+
+      let warp=(20000/(d+80))*(0.3+t);
+
+      let ny=y - dy/d * warp*0.12;
+
+      if(x===0) ctx.moveTo(x,ny);
+      else ctx.lineTo(x,ny);
     }
+    ctx.stroke();
+  }
 
-    function easeInOut(t) {
-      return t * t * (3 - 2 * t);
-    }
+  // дыра
+  ctx.beginPath();
+  ctx.arc(cx,cy,50,0,Math.PI*2);
+  ctx.fillStyle="black";
+  ctx.shadowBlur=40;
+  ctx.shadowColor="purple";
+  ctx.fill();
+  ctx.shadowBlur=0;
 
-    function getZ(t) {
-      const inv = 1 - t;
-      return 0.04 + Math.pow(inv, 2.15) * 0.96;
-    }
+  // диск
+  ctx.beginPath();
+  ctx.ellipse(cx,cy,120,35,0,0,Math.PI*2);
+  ctx.strokeStyle="orange";
+  ctx.lineWidth=6;
+  ctx.stroke();
 
-    function getLambda(z) {
-      return 520 + z * 520;
-    }
+  // фотон
+  let px = lerp(80,cx-120,ease(t));
+  let py = cy - (1-t)*60;
 
-    function getGravityLabel(z) {
-      if (z < 0.25) return "слабое";
-      if (z < 0.55) return "среднее";
-      if (z < 0.8) return "сильное";
-      return "очень сильное";
-    }
+  // траектория
+  ctx.beginPath();
+  for(let x=60;x<px;x+=5){
+    let k=(x-60)/(px-60);
+    let bend=(1-t)*70*Math.pow(k,2);
+    let y=cy + bend - 20;
 
-    function getDistanceLabel(t) {
-      if (t > 0.72) return "Далеко от центра";
-      if (t > 0.46) return "Средняя область";
-      if (t > 0.24) return "Близко к центру";
-      return "Очень близко к горизонту";
-    }
+    if(x===60) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle=photonColor(t);
+  ctx.lineWidth=3;
+  ctx.stroke();
 
-    function photonColor(t) {
-      const c = easeInOut(1 - t);
-      const r = Math.round(lerp(255, 255, c));
-      const g = Math.round(lerp(243, 90, c));
-      const b = Math.round(lerp(190, 70, c));
-      return `rgb(${r},${g},${b})`;
-    }
+  // glow
+  let g=ctx.createRadialGradient(px,py,2,px,py,40);
+  g.addColorStop(0, photonColor(t));
+  g.addColorStop(1,"transparent");
 
-    function photonGlowColor(t) {
-      const c = easeInOut(1 - t);
-      const r = Math.round(lerp(255, 255, c));
-      const g = Math.round(lerp(220, 80, c));
-      const b = Math.round(lerp(130, 80, c));
-      returnzing: border-box; }
+  ctx.fillStyle=g;
+  ctx.beginPath();
+  ctx.arc(px,py,40,0,Math.PI*2);
+  ctx.fill();
 
-   
-    }
+  // ядро
+  ctx.beginPath();
+  ctx.arc(px,py,6,0,Math.PI*2);
+  ctx.fillStyle=photonColor(t);
+  ctx.fill();
 
-    function roundRect(ctx, x, y, width, height, radius) {
-      ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.lineTo(x + width - radius, y);
-      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-      ctx.lineTo(x + width, y + height - radius);
-      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-      ctx.lineTo(x + radius, y + height);
-      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-      ctx.lineTo(x, y + radius);
-      ctx.quadraticCurveTo(x, y, x + radius, y);
-      ctx.closePath();
-    }
+  // белый центр
+  ctx.beginPath();
+  ctx.arc(px,py,3,0,Math.PI*2);
+  ctx.fillStyle="white";
+  ctx.globalAlpha=0.8;
+  ctx.fill();
+  ctx.globalAlpha=1;
+}
 
-    function drawWarpGrid(cx, cy) {
-      const w = simCanvas.width;
-      const h = simCanvas.height;
-      sctx.save();
-      sctx.strokeStyle = "rgba(170,190,255,0.08)";
-      sctx.lineWidth = 1;
+function drawGraph(){
 
-      for (let gy = 50; gy <= h - 50; gy += 28) {
-        sctx.beginPath();
-        for (let x = 20; x <= w - 20; x += 8) {
-          const dx = x - cx;
-          const dy = gy - cy;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const influence = 22000 / (dist + 80);
-          const warp = Math.sin((x * 0.02) + time * 0.6) * 2;
-          const y2 = gy + warp - (dy / (dist + 1)) * influence * 0.12;
-          if (x === 20) sctx.moveTo(x, y2);
-          else sctx.lineTo(x, y2);
-        }
-        sctx.stroke();
-      }
+  let w=graph.width;
+  let h=graph.height;
 
-      for (let gx = 40; gx <= w - 40; gx += 32) {
-        sctx.beginPath();
-        for (let y = 20; y <= h - 20; y += 8) {
-          const dx = gx - cx;
-          const dy = y - cy;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const influence = 22000 / (dist + 80);
-          const x2 = gx - (dx / (dist + 1)) * influence * 0.14;
-          if (y === 20) sctx.moveTo(x2, y);
-          else sctx.lineTo(x2, y);
-        }
-        sctx.stroke();
-      }
-      sctx.restore();
-    }
+  gctx.clearRect(0,0,w,h);
 
-    function drawSim() {
-      const w = simCanvas.width;
-      const h = simCanvas.height;
-      const cx = w * 0.72;
-      const cy = h * 0.5;
+  gctx.beginPath();
 
-      sctx.clearRect(0, 0, w, h);
+  for(let i=0;i<=100;i++){
+    let tt=i/100;
+    let z=getZ(tt);
 
-      const bgGrad = sctx.createLinearGradient(0, 0, 0, h);
-      bgGrad.addColorStop(0, "rgba(8,12,22,0.15)");
-      bgGrad.addColorStop(1, "rgba(8,12,22,0.32)");
-      sctx.fillStyle = bgGrad;
-      sctx.fillRect(0, 0, w, h);
+    let x=50+tt*(w-100);
+    let y=h-40 - z*(h-80);
 
-      stars.forEach(st => {
-        sctx.beginPath();
-        sctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
-        sctx.fillStyle =px;
-    }
+    if(i===0) gctx.moveTo(x,y);
+    else gctx.lineTo(x,y);
+  }
 
-    .hero-grid {
- 
-        sctx.fill();
-      });
+  gctx.strokeStyle="violet";
+  gctx.lineWidth=3;
+  gctx.stroke();
+  let z=getZ(t);
 
-      drawWarpGrid(cx, cy);
+  let px=50+t*(w-100);
+  let py=h-40 - z*(h-80);
 
-      const halo = sctx.createRadialGradient(cx, cy, 40, cx, cy, 190);
-      halo.addColorStop(0, "rgba(120,0,255,0)");
-      halo.addColorStop(0.45, "rgba(130,70,255,0.18)");
-      halo.addColorStop(0.8, "rgba(80,180,255,0.08)");
-      halo.addColorStop(1, "rgba(130,70,255,0)");
-      sctx.beginPath();
-      sctx.arc(cx, cy, 190, 0, Math.PI * 2);
-      sctx.fillStyle = halo;
-      sctx.fill();
+  gctx.beginPath();
+  gctx.arc(px,py,6,0,Math.PI*2);
+  gctx.fillStyle=photonColor(t);
+  gctx.fill();
+}
 
-      sctx.save();
-      sctx.translate(cx, cy);
-      sctx.rotate(ringAngle);
-      sctx.scale(1.95, 0.52);
+function loop(){
+  target = slider.value/100;
+  t = lerp(t,target,0.08);
+  time+=0.016;
 
-      const ring = sctx.createRadialGradient(0, 0, 28, 0, 0, 102);
-      ring.addColorStop(0, "rgba(255,160,0,0)");
-      ring.addColorStop(0.32, "rgba(255,125,0,0.9)");
-      ring.addColorStop(0.52, "rgba(255,225,165,0.98)");
-      ring.addColorStop(0.74, "rgba(255,90,0,0.72)");
-      ring.addColorStop(1, "rgba(255,90,0,0)");
-      sctx.beginPath();
-      sctx.arc(0, 0, 102, 0, Math.PI * 2);
-      sctx.fillStyle = ring;
-      sctx.fill();
-      sctx.restore();
+  draw();
+  drawGraph();
 
-      sctx.save();
-      sctx.translate(cx, cy);
-      sctx.rotate(-ringAngle * 0.65);
-      sctx.scale(1.45, 0.28);
-      sctx.strokeStyle = "rgba(255,240,200,0.18)";
-      sctx.lineWidth = 10;
-      sctx.beginPath();
-      sctx.arc(0, 0, 86, 0.1, 2.7);
-      sctx.stroke();
-      sctx.restore();
+  requestAnimationFrame(loop);
+}
 
-      sctx.beginPath();
-      sctx.arc(cx, cy, 56, 0, Math.PI * 2);
-      sctx.fillStyle = "#000";
-      sctx.shadowBlur = 38;
-      sctx.shadowColor = "rgba(120,0,255,0.86)";
-      sctx.fill();
-      sctx.shadowBlur = 0;
+loop();
+</script>
 
-      const photonStartX = 90;
-      const photonEndX = cx - 92;
-      const photonX = lerp(photonStartX, photonEndX, easeInOut(smoothT));
-      const photonY = cy - lerp(0, 44, 1 - smoothT);
-
-      const waveStrength = lerp(6, 18, 1 - smoothT);
-      sctx.beginPath();
-      for (let x = 40; x <= photonX - 12; x += 4) {
-        const k = (x - 40) / Math.max(1, photonX - 52);
-        const y = photonY + Math.sin(k * Math.PI * 10 + time * 2.5) * waveStrength * (0.35 + k * 0.75);
-        if (x === 40) sctx.moveTo(x, y);
-        else sctx.lineTo(x, y);
-      }
-      const waveGrad = sctx.createLinearGradient(40, photonY, photonX, photonY);
-      waveGrad.addColorStop(0, "rgba(255,220,150,0.12)");
-      waveGrad.addColorStop(0.45, "rgba(255,170,70,0.48)");
-      waveGrad.addColorStop(1, "rgba(255,91,77,0.82)");
-      sctx.strokeStyle = waveGrad;
-      sctx.lineWidth = 3.2;
-      sctx.stroke();
-
-      sctx.beginPath();
-      sctx.moveTo(photonX, photonY);
-      sctx.quadraticCurveTo((photonX + cx) / 2, photonY - 20, cx - 28, cy - 5);
-      sctx.strokeStyle = "rgba(255,255,255,0.08)";
-      sctx.lineWidth = 1.5;
-      sctx.stroke();
-
-      const color = photonColor(smoothT);
-      const glowBase = photonGlowColor(smoothT);
-
-      const photonGlow = sctx.createRadialGradient(photonX, photonY, 2, photonX, photonY, 28);
-      photonGlow.addColorStop(0, glowBase + "1)");
-      photonGlow.addColorStop(0.45, glowBase + "0.95)");
-      photonGlow.addColorStop(1, glowBase + "0)");
-      sctx.beginPath();
-      sctx.arc(photonX, photonY, 28, 0, Math.PI * 2);
-      sctx.fillStyle = photonGlow;
-      sctx.fill();
-
-      sctx.beginPath();
-      sctx.arc(photonX, photonY, 6, 0, Math.PI * 2);
-      sctx.fillStyle = color;
-      sctx.fill();
-
-      sctx.fillStyle = "rgba(255,255,255,0.85)";
-      sctx.font = "14px Arial";
-      sctx.fillText("фотон", photonX - 18, photonY - 18);
-      sctx.fillText("чёрная дыра", cx - 40, cy + 98);
-    }
-
-    function drawGraph() {
-      const w = graphCanvas.width;
-      const h = graphCanvas.height;
-      const padL = 72;
-      const padR = 30;
-      const padT = 30;
-      const padB = 56;
-
-      gctx.clearRect(0, 0, w, h);
-      gctx.fillStyle = "rgba(255,255,255,0.02)";
-      gctx.fillRect(0, 0, w, h);
-
-      gctx.strokeStyle = "rgba(255,255,255,0.08)";
-      gctx.lineWidth = 1;
-
-      for (let i = 0; i < 5; i++) {
-        const y = padT + ((h - padT - padB) / 4) * i;
-        gctx.beginPath();
-        gctx.moveTo(padL, y);
-        gctx.lineTo(w - padR, y);
-        gctx.stroke();
-      }
-
-      for (let i = 0; i < 6; i++) {
-        const x = padL + ((w - padL - padR) / 5) * i;
-        gctx.beginPath();
-        gctx.moveTo(x, padT);
-        gctx.lineTo(x, h - padB);
-        gctx.stroke();
-      }
-
-      gctx.strokeStyle = "rgba(255,255,255,0.38)";
-      gctx.lineWidth = 1.5;
-      gctx.beginPath();
-      gctx.moveTo(padL, padT);
-      gctx.lineTo(padL, h - padB);
-      gctx.lineTo(w - padR, h - padB);
-      gctx.stroke();
-
-      gctx.fillStyle = "rgba(255,255,255,0.78)";
-      gctx.font = "15px Arial";
-      gctx.fillText("z", 34, padT + 4);
-      gctx.fillText("положение фотона", w - 170, h - 16);
-
-      const pts = [];
-      for (let i = 0; i <= 80; i++) {
-        const t = i / 80;
-        const z = getZ(t);
-        pts.push({ t, z });
-      }
-
-      const mapX = v => padL + v * (w - padL - padR);
-      const mapY = v => (h - padB) - v * (h - padT - padB);
-
-      gctx.beginPath();
-      pts.forEach((p, i) => {
-        const x = mapX(p.t);
-        const y = mapY(p.z);
-        if (i === 0) gctx.moveTo(x, y);
-        else gctx.lineTo(x, y);
-      });
-
-      const lineGrad = gctx.createLinearGradient(padL, 0, w - padR, 0);
-      lineGrad.addColorStop(0, "rgba(120,180,255,0.92)");
-      lineGrad.addColorStop(0.42, "rgba(255,214,127,0.95)");
-      lineGrad.addColorStop(0.72, "rgba(255,155,47,0.96)");
-      lineGrad.addColorStop(1, "rgba(255,91,77,0.96)");
-      gctx.strokeStyle = lineGrad;
-      gctx.lineWidth = 4.5;
-      gctx.stroke();
-
-      gctx.lineTo(mapX(1), h - padB);
-      gctx.lineTo(mapX(0), h - padB);
-      gctx.closePath();
-
-      const areaGrad = gctx.createLinearGradient(0, padT, 0, h - padB);
-      areaGrad.addColorStop(0, "rgba(255,91,77,0.22)");
-      areaGrad.addColorStop(1, "rgba(255,91,77,0.02)");
-      gctx.fillStyle = areaGrad;
-      gctx.fill();
-
-      const currentZ = getZ(smoothT);
-      const px = mapX(smoothT);
-      const py = mapY(currentZ);
-
-      gctx.beginPath();
-      gctx.moveTo(px, padT);
-      gctx.lineTo(px, h - padB);
-      gctx.strokeStyle = "rgba(255,255,255,0.16)";
-      gctx.lineWidth = 2;
-      gctx.stroke();
-
-      gctx.beginPath();
-      gctx.arc(px, py, 7, 0, Math.PI * 2);
-      gctx.fillStyle = photonColor(smoothT);
-      gctx.fill();
-
-      gctx.beginPath();
-      gctx.arc(px, py, 18, 0, Math.PI * 2);
-      gctx.fillStyle = "rgba(255,255,255,0.10)";
-      gctx.fill();
-
-      const tipW = 148;
-      const tipH = 56;
-      let tipX = px + 16;
-      let tipY = py - 70;
-      if (tipX + tipW > w - 10) tipX = px - tipW - 16;
-      if (tipY < 10) tipY = py + 18;
-
-      gctx.fillStyle = "rgba(10,14,24,0.9)";
-      gctx.strokeStyle = "rgba(255,255,255,0.12)";
-      gctx.lineWidth = 1;
-      roundRect(gctx, tipX, tipY, tipW, tipH, 14);
-      gctx.fill();
-      gctx.stroke();
-
-      gctx.fillStyle = "rgba(255,255,255,0.92)";
-      gctx.font = "14px Arial";
-      gctx.fillText("z = " + currentZ.toFixed(2), tipX + 14, tipY + 23);
-      gctx.fillText("λ = " + Math.round(getLambda(currentZ)) + " нм", tipX + 14, tipY + 42);
-
-      gctx.fillStyle = "rgba(255,255,255,0.62)";
-      gctx.font = "13px Arial";
-      gctx.fillText("далеко", padL + 2, h - 20);
-      gctx.fillText("ближе к горизонту", w - 180, h - 20);
-    }
-
-    function updateReadouts() {
-      const z = getZ(smoothT);
-      const lambda = getLambda(z);
-      zValue.textContent = z.toFixed(2);
-      lambdaValue.textContent = Math.round(lambda) + " нм";
-      gravityValue.textContent = getGravityLabel(z);
-      distanceText.textContent = getDistanceLabel(smoothT);
-    }
-
-    function animate() {
-      targetT = Number(slider.value) / 100;
-      smoothT = lerp(smoothT, targetT, 0.08);
-      ringAngle += 0.013;
-      time += 0.016;
-
-      drawSim();
-      drawGraph();
-      updateReadouts();
-
-      requestAnimationFrame(animate);
-    }
-
-    slider.addEventListener("input", () => {
-      targetT = Number(slider.value) / 100;
-    });
-
-    animate();
-  </script>
 </body>
 </html>
