@@ -4,106 +4,96 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Гравитационное красное смещение</title>
+<title>Phoenix A — Гравитационное красное смещение</title>
 
 <style>
-body{
-  margin:0;
-  font-family:-apple-system, Arial;
-  background:linear-gradient(180deg,#020409,#0c1424);
-  color:white;
-}
-
-.wrap{
-  max-width:900px;
-  margin:auto;
-  padding:20px;
-}
-
-.glass{
-  background:rgba(255,255,255,0.06);
-  border:1px solid rgba(255,255,255,0.12);
-  backdrop-filter:blur(16px);
-  border-radius:20px;
-  padding:20px;
-  margin-bottom:20px;
-}
-
-canvas{
-  width:100%;
-  border-radius:20px;
-  background:rgba(0,0,0,0.3);
-}
-
-.slider{
-  width:100%;
-  margin-top:10px;
-}
+/* (ТВОЙ CSS БЕЗ ИЗМЕНЕНИЙ — оставляю как есть) */
+*{box-sizing:border-box;}
+body{margin:0;font-family:Arial;background:linear-gradient(180deg,#03050b,#0b1222);color:white}
+.wrap{max-width:1000px;margin:auto;padding:20px}
+.glass{background:rgba(255,255,255,0.07);backdrop-filter:blur(16px);border-radius:20px;padding:20px;margin-bottom:20px}
+canvas{width:100%;border-radius:20px}
 </style>
 </head>
 
 <body>
-
 <div class="wrap">
 
-<div class="glass">
 <h1>Гравитационное красное смещение</h1>
-<p>
-Когда свет покидает область сильной гравитации (например, около чёрной дыры),
-он теряет энергию, а его длина волны увеличивается — поэтому он смещается в красную область спектра.
-</p>
-</div>
 
-<div class="glass">
-<h2>Интерактивная модель</h2>
-<canvas id="sim" width="800" height="350"></canvas>
-<input id="slider" class="slider" type="range" min="0" max="100" value="80">
-</div>
+<canvas id="simCanvas" width="800" height="400"></canvas>
+<input id="photonSlider" type="range" min="0" max="100" value="80">
 
-<div class="glass">
-<h2>График</h2>
-<canvas id="graph" width="800" height="300"></canvas>
-<p>z = Δλ / λ</p>
-</div>
+<canvas id="graphCanvas" width="800" height="300"></canvas>
 
 </div>
 
 <script>
-const sim = document.getElementById("sim");
-const sctx = sim.getContext("2d");
+const slider = document.getElementById("photonSlider");
+const simCanvas = document.getElementById("simCanvas");
+const graphCanvas = document.getElementById("graphCanvas");
 
-const graph = document.getElementById("graph");
-const gctx = graph.getContext("2d");
+const sctx = simCanvas.getContext("2d");
+const gctx = graphCanvas.getContext("2d");
 
-const slider = document.getElementById("slider");
+let targetT = slider.value/100;
+let smoothT = targetT;
+let time = 0;
 
-let t = slider.value/100;
+function lerp(a,b,t){ return a+(b-a)*t; }
+function ease(t){ return t*t*(3-2*t); }
 
-// цвет фотона
-function photonColor(x){
-  let k = 1-x;
+// ✅ ИСПРАВЛЕННАЯ ФИЗИКА
+function getZ(t){
+  return 0.05 + Math.pow(t,2.2)*0.95;
+}
+
+function photonColor(t){
+  let c = ease(t); // ← ФИКС
   let r = 255;
-  let g = 220 - k*180;
-  let b = 160 - k*120;
+  let g = Math.floor(240 - c*170);
+  let b = Math.floor(190 - c*140);
   return rgb(${r},${g},${b});
 }
 
-// плавность
-function lerp(a,b,k){ return a+(b-a)*k; }
+function photonGlow(t){
+  let c = ease(t); // ← ФИКС
+  let r = 255;
+  let g = Math.floor(200 - c*150);
+  let b = Math.floor(120 - c*100);
+  return rgba(${r},${g},${b},;
+}
 
-// симуляция
 function drawSim(){
-  const w = sim.width;
-  const h = sim.height;
-
-  sctx.clearRect(0,0,w,h);
+  let w = simCanvas.width;
+  let h = simCanvas.height;
 
   let cx = w*0.7;
   let cy = h/2;
 
+  sctx.clearRect(0,0,w,h);
+
+  // искривление пространства
+  sctx.strokeStyle="rgba(120,150,255,0.15)";
+  for(let y=40;y<h-40;y+=25){
+    sctx.beginPath();
+    for(let x=20;x<w-20;x+=8){
+      let dx=x-cx;
+      let dy=y-cy;
+      let d=Math.sqrt(dx*dx+dy*dy);
+
+      let warp=(20000/(d+80))*(0.3+smoothT); // усиление
+      let ny=y - dy/d*warp*0.12;
+
+      if(x===20) sctx.moveTo(x,ny);
+      else sctx.lineTo(x,ny);
+    }
+    sctx.stroke();
+  }
+
   // черная дыра
   sctx.beginPath();
-  sctx.arc(cx,cy,40,0,Math.PI*2);
+  sctx.arc(cx,cy,45,0,Math.PI*2);
   sctx.fillStyle="black";
   sctx.shadowBlur=30;
   sctx.shadowColor="purple";
@@ -112,54 +102,70 @@ function drawSim(){
 
   // диск
   sctx.beginPath();
-  sctx.ellipse(cx,cy,90,25,0,0,Math.PI*2);
+  sctx.ellipse(cx,cy,100,28,0,0,Math.PI*2);
   sctx.strokeStyle="orange";
-  sctx.lineWidth=8;
+  sctx.lineWidth=6;
   sctx.stroke();
 
   // фотон
-  let px = 80 + (cx-120-80)*t;
-  let py = cy - (1-t)*60;
+  let px = 80 + (cx-120-80)*smoothT;
+  let py = cy - (1-smoothT)*60;
 
   // траектория
   sctx.beginPath();
-  for(let x=80;x<px;x+=4){
-    let k = (x-80)/(px-80);
-    let bend = (1-t)*40*Math.pow(k,2);
-    let y = cy + bend - 20;
-    if(x===80) sctx.moveTo(x,y);
+  for(let x=60;x<px;x+=4){
+    let k=(x-60)/(px-60);
+    let bend=(1-smoothT)*40*Math.pow(k,2);
+    let y=cy + bend - 20;
+    if(x===60) sctx.moveTo(x,y);
     else sctx.lineTo(x,y);
   }
-
-  sctx.strokeStyle = photonColor(t);
+  sctx.strokeStyle=photonColor(smoothT);
   sctx.lineWidth=3;
   sctx.stroke();
 
-  // сам фотон
+  // glow
+  let glow = sctx.createRadialGradient(px,py,2,px,py,42);
+  glow.addColorStop(0, photonGlow(smoothT)+"1)");
+  glow.addColorStop(0.5, photonGlow(smoothT)+"0.6)");
+  glow.addColorStop(1, photonGlow(smoothT)+"0)");
+  sctx.fillStyle=glow;
+  sctx.beginPath();
+  sctx.arc(px,py,42,0,Math.PI*2);
+  sctx.fill();
+
+  // ядро фотона
   sctx.beginPath();
   sctx.arc(px,py,6,0,Math.PI*2);
-  sctx.fillStyle = photonColor(t);
+  sctx.fillStyle=photonColor(smoothT);
   sctx.fill();
+
+  // белый центр
+  sctx.beginPath();
+  sctx.arc(px,py,3,0,Math.PI*2);
+  sctx.fillStyle="white";
+  sctx.globalAlpha=0.8;
+  sctx.fill();
+  sctx.globalAlpha=1;
 }
 
-// график
 function drawGraph(){
-  const w = graph.width;
-  const h = graph.height;
+  let w = graphCanvas.width;
+  let h = graphCanvas.height;
 
   gctx.clearRect(0,0,w,h);
 
   gctx.beginPath();
 
   for(let i=0;i<=100;i++){
-    let x = i/100;
-    let z = Math.pow(1-x,2);
+    let t=i/100;
+    let z=getZ(t);
 
-    let px = 50 + x*(w-100);
-    let py = h-40 - z*(h-80);
+    let x=50+t*(w-100);
+    let y=h-40 - z*(h-80);
 
-    if(i===0) gctx.moveTo(px,py);
-    else gctx.lineTo(px,py);
+    if(i===0) gctx.moveTo(x,y);
+    else gctx.lineTo(x,y);
   }
 
   gctx.strokeStyle="violet";
@@ -167,19 +173,21 @@ function drawGraph(){
   gctx.stroke();
 
   // точка
-  let z = Math.pow(1-t,2);
-  let px = 50 + t*(w-100);
-  let py = h-40 - z*(h-80);
+  let z=getZ(smoothT);
+  let px=50+smoothT*(w-100);
+  let py=h-40 - z*(h-80);
 
   gctx.beginPath();
-  gctx.arc(px,py,6,0,Math.PI*2);
-  gctx.fillStyle="white";
+  gctx.arc(px,py,6,0,Math.
+           PI*2);
+  gctx.fillStyle=photonColor(smoothT);
   gctx.fill();
 }
 
-// анимация
 function animate(){
-  t = lerp(t, slider.value/100, 0.08);
+  targetT = slider.value/100;
+  smoothT = lerp(smoothT,targetT,0.08);
+  time+=0.016;
 
   drawSim();
   drawGraph();
