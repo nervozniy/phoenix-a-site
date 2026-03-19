@@ -4,14 +4,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Black Hole FINAL</title>
+<title>Black Hole REAL</title>
 
 <style>
 body{
   margin:0;
   overflow:hidden;
   background:black;
-  font-family:-apple-system;
 }
 
 #ui{
@@ -22,11 +21,12 @@ body{
   width:90%;
   max-width:400px;
 
-  backdrop-filter:blur(25px);
+  backdrop-filter:blur(20px);
   background:rgba(255,255,255,0.1);
   border-radius:15px;
   padding:15px;
   color:white;
+  font-family:-apple-system;
 }
 
 input{ width:100%; }
@@ -43,11 +43,14 @@ input{ width:100%; }
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 
 <script>
+// === сцена ===
 const scene = new THREE.Scene();
 
+// камера
 const camera = new THREE.PerspectiveCamera(70,innerWidth/innerHeight,0.1,1000);
 camera.position.z = 7;
 
+// рендер
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth,innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -58,42 +61,53 @@ const light = new THREE.PointLight(0xffffff,4);
 light.position.set(5,5,5);
 scene.add(light);
 
-// чёрная дыра
+// === чёрная дыра ===
 const hole = new THREE.Mesh(
   new THREE.SphereGeometry(1.6,64,64),
   new THREE.MeshBasicMaterial({color:0x000000})
 );
 scene.add(hole);
 
-// диск
-const ring = new THREE.Mesh(
-  new THREE.TorusGeometry(3.2,0.6,32,200),
-  new THREE.MeshStandardMaterial({
-    color:0xffaa33,
-    emissive:0xff5500,
-    emissiveIntensity:3
-  })
-);
-ring.rotation.x = Math.PI/2;
-scene.add(ring);
+// === диск (двойной) ===
+function createDisk(){
+  return new THREE.Mesh(
+    new THREE.TorusGeometry(3.2,0.6,32,200),
+    new THREE.MeshStandardMaterial({
+      color:0xffaa33,
+      emissive:0xff5500,
+      emissiveIntensity:3
+    })
+  );
+}
 
-// звезды
-let stars = [];
-for(let i=0;i<400;i++){
+const diskTop = createDisk();
+diskTop.rotation.x = Math.PI/2;
+scene.add(diskTop);
+
+const diskBottom = createDisk();
+diskBottom.rotation.x = Math.PI/2;
+diskBottom.scale.y = -1;
+scene.add(diskBottom);
+
+// === звезды ===
+const stars = [];
+for(let i=0;i<500;i++){
   const star = new THREE.Mesh(
     new THREE.SphereGeometry(0.03),
     new THREE.MeshBasicMaterial({color:0xffffff})
   );
+
   star.position.set(
-    (Math.random()-0.5)*80,
-    (Math.random()-0.5)*80,
-    (Math.random()-0.5)*80
+    (Math.random()-0.5)*100,
+    (Math.random()-0.5)*100,
+    (Math.random()-0.5)*100
   );
+
   scene.add(star);
   stars.push(star);
 }
 
-// фотон
+// === фотон ===
 const photon = new THREE.Mesh(
   new THREE.SphereGeometry(0.2,32,32),
   new THREE.MeshStandardMaterial({
@@ -104,31 +118,40 @@ const photon = new THREE.Mesh(
 );
 scene.add(photon);
 
+// === управление ===
 const slider = document.getElementById("slider");
 
+// === физика (псевдо) ===
+function gravitationalWarp(obj, strength){
+  let dx = obj.position.x;
+  let dy = obj.position.y;
+  let dz = obj.position.z;
+
+  let dist = Math.sqrt(dx*dx+dy*dy+dz*dz);
+
+  let force = strength/(dist*dist+1);
+
+  obj.position.x -= dx*force;
+  obj.position.y -= dy*force;
+  obj.position.z -= dz*force;
+}
+
+// === анимация ===
 function animate(){
   requestAnimationFrame(animate);
 
   let t = slider.value/100;
 
-  // вращение
-  ring.rotation.z += 0.02;
+  // вращение диска
+  diskTop.rotation.z += 0.02;
+  diskBottom.rotation.z += 0.02;
 
-  // искажение ВСЕГО пространства
+  // искажение звезд
   stars.forEach(star=>{
-    let dx = star.position.x;
-    let dy = star.position.y;
-    let dz = star.position.z;
-
-    let dist = Math.sqrt(dx*dx+dy*dy+dz*dz);
-
-    let warp = 5/(dist+2);
-
-    star.position.x += -dx*warp*0.02*(1-t);
-    star.position.y += -dy*warp*0.02*(1-t);
+    gravitationalWarp(star,0.02*(1-t));
   });
 
-  // фотон (линзирование)
+  // траектория фотона (линзирование)
   let curve = Math.pow(1-t,2);
 
   photon.position.x = -6 + t*5;
@@ -137,7 +160,7 @@ function animate(){
   // красное смещение
   let r = 1;
   let g = 1 - (1-t)*0.9;
-  let b = 0.4 - (1-t)*0.4;
+  let b = 0.3 - (1-t)*0.3;
 
   photon.material.color.setRGB(r,g,b);
   photon.material.emissive.setRGB(r*0.8,g*0.2,b*0.1);
@@ -149,16 +172,18 @@ function animate(){
       1-(0.2-t)*3,
       1
     );
+  } else {
+    photon.scale.set(1,1,1);
   }
 
-  // горизонт событий (исчезновение)
+  // горизонт событий
   if(t < 0.1){
     photon.visible = false;
   } else {
     photon.visible = true;
   }
 
-  // камера эффект
+  // камера
   camera.position.z = 7 - (1-t)*3;
 
   renderer.render(scene,camera);
