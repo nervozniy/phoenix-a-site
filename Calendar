@@ -1,0 +1,15 @@
+<?php
+$days = 31;
+$currentDay = 4;
+
+$Week = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+
+for ($day = 1; $day <= $days; $day++) {
+    echo $day . " число - " . $Week[$currentDay] . "<br>";
+
+    $currentDay++;
+
+    if ($currentDay > 6) {
+        $currentDay = 0;
+    }
+}
